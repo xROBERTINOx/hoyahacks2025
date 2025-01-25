@@ -19,13 +19,9 @@ async function connectToDatabase() {
 
         console.log("MongoDB Connected Successfully");
         return connection;
-    } catch (error: any) {
-        console.error("MongoDB Connection FAILED:", {
-            message: error.message,
-            name: error.name,
-            code: error.code,
-            stack: error.stack
-        });
+    } catch (error) {
+        console.log(error);
+        console.error("MongoDB Connection FAILED:", {});
         throw error;
     }
 }

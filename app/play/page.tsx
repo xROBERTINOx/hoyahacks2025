@@ -17,9 +17,6 @@ const Page = () => {
   const [hintCount, setHintCount] = useState<number>(0);
   const [score, setScore] = useState<number>(100);
 
-  const [userWantsHint, setUserWantsHint] = useState(false);
-  const [hint, setHint] = useState('');
-
   // Initialize score from localStorage or set to 100
   useEffect(() => {
     const storedScore = localStorage.getItem('score');
@@ -67,9 +64,9 @@ const Page = () => {
       ]);
   
       setHintCount((prevCount) => prevCount + 1); // Increment hint count
-      setUserWantsHint(true);
+      // setUserWantsHint(true);
     } catch (err) {
-      setError('Failed to fetch hint from Gemini');
+      setError('Failed to fetch hint from Gemini:' + err);
     }
   };
   
@@ -96,7 +93,7 @@ const Page = () => {
 
       setQuestionSubmitted(true);
     } catch (err) {
-      setError('Failed to fetch data from Gemini');
+      setError('Failed to fetch data from Gemini:'+err);
     } finally {
       setLoading(false);
     }
@@ -120,7 +117,7 @@ const Page = () => {
         ...prevResponses,    // Include the existing responses after it
       ]);
     } catch (err) {
-      setError('Failed to fetch data from Gemini');
+      setError('Failed to fetch data from Gemini:'+err);
     } finally {
       setLoading(false);
     }

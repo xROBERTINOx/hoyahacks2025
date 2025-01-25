@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 // Use the environment variable for the API key
 const NEXT_PUBLIC_GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
