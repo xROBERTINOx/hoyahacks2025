@@ -16,7 +16,7 @@ const GamePage = () => {
   const [questionData, setQuestionData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>('');
-  const [score, setScore] = useState<number>(0);
+  const [score, setScore] = useState<number>(100);
   const [generatedQuestion, setGeneratedQuestion] = useState<string>('');
   const [hintCount, setHintCount] = useState<number>(0);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
@@ -33,33 +33,6 @@ const [code, setCode] = useState<string>('')
         setLanguage(event.target.value);
     }
 
-  const checkUsername = async () => {
-    if (!username.trim()) return alert('Please enter a username.');
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('username', username.trim());
-
-      if (error) throw new Error(error.message);
-
-      if (data && data.length > 0) {
-        await supabase.from('students').update({ score: 0 }).eq('username', username.trim());
-        setScore(0);
-      } else {
-        const { error: insertError } = await supabase.from('students').insert([{ username: username.trim(), score: 0 }]);
-        if (insertError) throw new Error(insertError.message);
-        setScore(0);
-        alert('Welcome! Your score has been set to 0.');
-      }
-    } catch (err) {
-      alert('Error: ' + (err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmitQuestion = async () => {
     if (!tableName.trim() || !difficulty || !username.trim()) {
@@ -67,6 +40,34 @@ const [code, setCode] = useState<string>('')
     }
   
     setLoading(true);
+
+    if (!username.trim()) return alert('Please enter a username.');
+    setLoading(true);
+
+    try {
+      // Upsert: It will either update if the username exists, or insert if it doesn't.
+      const { data, error } = await supabase
+        .from('users')
+        .upsert(
+          [
+            { username: username.trim(), score: 100 }
+          ],
+          { onConflict: 'username' } // Ensure the upsert is based on the 'username' field
+        );
+    
+      if (error) throw new Error(error.message);
+    
+      setScore(100); // Update score state
+      alert(data ? 'Your score has been updated to 100.' : 'Welcome! Your score has been set to 100.');
+    
+    } catch (err) {
+      alert('Error: ' + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+    
+    
+
     
     try {
       // Check if the table exists
@@ -137,26 +138,66 @@ const [code, setCode] = useState<string>('')
     };
 
     const handleSubmitCode = async (event: React.FormEvent) => {
-        event.preventDefault();
-        if (!language.trim() || !code.trim()) return;
+      event.preventDefault();
+      if (!language.trim() || !code.trim()) return;
     
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setError(null);
     
-        try {
-          const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code}`;
-          const response = await getGoogleGeminiData(prompt);
+      const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code}, only sending the number`;
+alert("about to get response");
+
+try {
+  const response = await getGoogleGeminiData(prompt);
+  alert("awaiting response");
+
+  // Extract the score from the response
+  const score = parseInt(response); // Assuming Gemini's response is the score number
+
+  if (isNaN(score)) {
+    setError('Invalid score received');
+    return;
+  }
+
+  alert(`Received score: ${score}`);
+
+  // Assuming we have the student's username (could be passed in via props, state, etc.)
+  const studentUsername = username; // Replace with actual username variable
+
+  // Fetch the current score of the student
+  const { data: currentData, error: fetchError } = await supabase
+    .from('users')
+    .select('score')
+    .eq('username', studentUsername)
+    .single();
+
+  if (fetchError) {
+    setError('Error fetching current score: ' + fetchError.message);
+    return;
+  }
+
+  // Add the new score to the current score
+  const newScore = (currentData?.score || 0) + score;
+
+  // Update the student's total score in the 'users' table
+  const { data, error } = await supabase
+    .from('users')
+    .update({ score: newScore })
+    .eq('username', studentUsername);
+
+  if (error) {
+    setError('Error updating student score: ' + error.message);
+  } else {
+    // Optionally, log the successful update
+    console.log(`Updated score for ${studentUsername}:`, data);
+    alert(`Successfully updated score for ${studentUsername}`);
+  }
+} catch (err) {
+  setError('Failed to submit code or update score: ' + (err instanceof Error ? err.message : 'Unknown error'));
+}
+
+    };
     
-          setGeminiResponses((prevResponses) => [
-            ...prevResponses,
-            { prompt, response, hintNumber: 0 }, // No hint number for code submission
-          ]);
-        } catch (err) {
-          setError('Failed to submit code to Gemini: ' + err);
-        } finally {
-          setLoading(false);
-        }
-      };
     
   
       return (

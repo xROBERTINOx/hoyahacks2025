@@ -221,3 +221,31 @@ body {
   word-wrap: break-word; /* Ensure words break within hint cards */
   overflow-wrap: break-word; /* Ensure wrapping */
 }
+
+/* Add any new styles or use existing ones from your global stylesheet */
+.section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.question-card, .student-card {
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.question-topic {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.student-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
