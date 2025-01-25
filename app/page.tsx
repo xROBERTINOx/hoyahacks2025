@@ -9,16 +9,6 @@ const HomePage = () => {
           <button>Play</button>
         </Link>
       </div>
-      <div>
-        <Link href="/signin">
-          <button>Sign In</button>
-        </Link>
-      </div>
-      <div>
-        <Link href="/signup">
-          <button>Sign Up</button>
-        </Link>
-      </div>
     </div>
   );
 };
