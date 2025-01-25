@@ -18,6 +18,20 @@ const GamePage = () => {
   const [username, setUsername] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [generatedQuestion, setGeneratedQuestion] = useState<string>('');
+  const [hintCount, setHintCount] = useState<number>(0);
+  const [questionSubmitted, setQuestionSubmitted] = useState(false);
+  const [geminiResponses, setGeminiResponses] = useState<
+    { prompt: string; response: string; isHint?: boolean; hintNumber: number }[]
+  >([]); 
+  const [error, setError] = useState<string | null>(null);
+const [language, setLanguage] = useState<string>('');
+const [code, setCode] = useState<string>('')
+
+
+
+    const handleLanguageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setLanguage(event.target.value);
+    }
 
   const checkUsername = async () => {
     if (!username.trim()) return alert('Please enter a username.');
@@ -38,6 +52,7 @@ const GamePage = () => {
         const { error: insertError } = await supabase.from('students').insert([{ username: username.trim(), score: 0 }]);
         if (insertError) throw new Error(insertError.message);
         setScore(0);
+        alert('Welcome! Your score has been set to 0.');
       }
     } catch (err) {
       alert('Error: ' + (err as Error).message);
@@ -52,22 +67,16 @@ const GamePage = () => {
     }
   
     setLoading(true);
+    
     try {
-      // Check if the table exists and fetch the topic from the first row (id = 1)
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('topic')
-        .eq('id', 1)
-        .single(); // Fetch only the first row
-  
-      if (error || !data) {
-        throw new Error(`Failed to fetch topic for table "${tableName}".`);
+      // Check if the table exists
+      const { data, error } = await supabase.from(tableName).select('*').limit(1);
+      if (error) {
+        throw new Error(`Table "${tableName}" does not exist or is inaccessible.`);
       }
   
-      const { topic } = data;
-  
       // Proceed with Gemini API call
-      const prompt = `Create a ${difficulty} LeetCode-like question about the topic: ${topic}`;
+      const prompt = `Create a ${difficulty} LeetCode-like question about the topic: ${tableName}`;
       const response = await getGoogleGeminiData(prompt);
   
       // Store the generated question in state
@@ -77,102 +86,247 @@ const GamePage = () => {
       await supabase.from(tableName).insert([
         {
           difficulty,
-          topic,
+          topic: tableName,
           question: response,
           createdby: username,
         },
       ]);
   
       alert('Question submitted successfully!');
+      setQuestionSubmitted(true);
     } catch (err) {
       alert('Error: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCodeChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCode(event.target.value);
+  };
+
+  const handleHintRequest = async () => {
+      try {
+        if (hintCount >= 3) {
+          setScore((prevScore) => prevScore - 10); // Deduct points after 3 hints
+          localStorage.setItem('score', String(score - 10));
+        }
   
+        const prompt = `Don't include any asterisks or marks. Imagine 4 levels of hints, where 4 nearly gives away the answer and 1 is quite vague. Give a level ${
+          hintCount + 1
+        } LeetCode-like hint for the coding question you provided. just provide the hint do not include any other additional info`;
   
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-6">Game Page</h1>
+        
+  
+        const response = await getGoogleGeminiData(prompt);
+  
+        // Increment hint count
+        const newHint = {
+          prompt: `Hint ${hintCount + 1}`,
+          response,
+          isHint: true,
+          hintNumber: hintCount + 1, // The order of hints
+        };
+  
+        // Append the new hint to the list
+        setGeminiResponses((prevResponses) => [...prevResponses, newHint]); // Append the new hint
+        setHintCount((prevCount) => prevCount + 1); // Increment the hint count
+      } catch (err) {
+        setError('Failed to fetch hint from Gemini: ' + err);
+      }
+    };
 
-      <div className="flex flex-col gap-6">
-        {/* Username Input */}
-        <div className="form-group">
-          <label className="block mb-2 text-lg font-medium">Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            className="input"
-          />
-          
-        </div>
-
-        {/* Table Name Input */}
-        <div className="form-group">
-          <label className="block mb-2 text-lg font-medium">Table Name:</label>
-          <input
-            type="text"
-            value={tableName}
-            onChange={(e) => setTableName(e.target.value)}
-            placeholder="Enter table name"
-            className="input"
-          />
-        </div>
-
-        {/* Difficulty Selection */}
-        <div className="form-group">
-          <label className="block mb-2 text-lg font-medium">Difficulty:</label>
-          <div className="flex gap-4">
-            {['easy', 'medium', 'hard'].map((level) => (
-              <button
-                key={level}
-                className={`difficulty-btn ${difficulty === level ? 'selected' : ''}`}
-                onClick={() => setDifficulty(level)}
-              >
-                {level.charAt(0).toUpperCase() + level.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Submit Question */}
-        <button
-          onClick={handleSubmitQuestion}
-          disabled={loading}
-          className="btn"
-        >
-          {loading ? 'Submitting...' : 'Submit Question'}
-        </button>
-
-        {/* Generated Question */}
-        {generatedQuestion && (
-          <div className="response-box mt-6">
-            <h2 className="text-lg font-bold">Generated Question:</h2>
-            <p className="mt-2">{generatedQuestion}</p>
-          </div>
-        )}
-
-        {/* Display Questions */}
-        {questionData.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-lg font-bold">Questions from Table:</h2>
-            {questionData.map((item, index) => (
-              <div key={index} className="question-card mt-4">
-                <p><strong>Topic:</strong> {item.topic}</p>
-                <p><strong>Difficulty:</strong> {item.difficulty}</p>
-                <p><strong>Question:</strong> {item.question}</p>
+    const handleSubmitCode = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!language.trim() || !code.trim()) return;
+    
+        setLoading(true);
+        setError(null);
+    
+        try {
+          const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code}`;
+          const response = await getGoogleGeminiData(prompt);
+    
+          setGeminiResponses((prevResponses) => [
+            ...prevResponses,
+            { prompt, response, hintNumber: 0 }, // No hint number for code submission
+          ]);
+        } catch (err) {
+          setError('Failed to submit code to Gemini: ' + err);
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+  
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-center mb-6">Game Page</h1>
+      
+          <div className="flex flex-col gap-6">
+            {!questionSubmitted ? (
+              <div className="center-box">
+                {/* Username Input */}
+                <div className="form-group">
+                  <label className="block mb-2 text-lg font-medium">Username:</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="input"
+                  />
+                </div>
+      
+                {/* Table Name Input */}
+                <div className="form-group">
+                  <label className="block mb-2 text-lg font-medium">Table Name:</label>
+                  <input
+                    type="text"
+                    value={tableName}
+                    onChange={(e) => setTableName(e.target.value)}
+                    placeholder="Enter table name"
+                    className="input"
+                  />
+                </div>
+      
+                {/* Difficulty Selection */}
+                <div className="form-group">
+                  <label className="block mb-2 text-lg font-medium">Difficulty:</label>
+                  <div className="flex gap-4">
+                    {['easy', 'medium', 'hard'].map((level) => (
+                      <button
+                        key={level}
+                        className={`difficulty-btn ${difficulty === level ? 'selected' : ''}`}
+                        onClick={() => setDifficulty(level)}
+                      >
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+      
+                {/* Submit Question */}
+                <button
+                  onClick={handleSubmitQuestion}
+                  disabled={loading}
+                  className="btn"
+                >
+                  {loading ? 'Submitting...' : 'Submit Question'}
+                </button>
               </div>
-            ))}
+            ) : (
+              <>
+                <div className="flex gap-6">
+                  {/* Left Section: Generated Question */}
+                  <div className="left-section w-2/3">
+                    {/* Generated Question */}
+                    {generatedQuestion && (
+                      <div className="response-box mt-6">
+                        <h2 className="text-lg font-bold">Generated Question:</h2>
+                        <p className="mt-2">{generatedQuestion}</p>
+                      </div>
+                    )}
+      
+                    {/* Display Questions */}
+                    {questionData.length > 0 && (
+                      <div className="mt-6">
+                        <h2 className="text-lg font-bold">Questions from Table:</h2>
+                        {questionData.map((item, index) => (
+                          <div key={index} className="question-card mt-4">
+                            <p><strong>Topic:</strong> {item.topic}</p>
+                            <p><strong>Difficulty:</strong> {item.difficulty}</p>
+                            <p><strong>Question:</strong> {item.question}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+      
+                  {/* Right Section: Language & Code */}
+                  <div className="right-section w-1/3">
+                    {/* Programming Language */}
+                    <div className="form-group">
+                      <label htmlFor="language">Programming Language:</label>
+                      <input
+                        type="text"
+                        id="language"
+                        value={language}
+                        onChange={handleLanguageChange}
+                        placeholder="Enter language"
+                        className="input"
+                      />
+                    </div>
+      
+                    {/* Your Code */}
+                    <div className="form-group">
+                      <label htmlFor="code">Your Code:</label>
+                      <textarea
+                        id="code"
+                        value={code}
+                        onChange={handleCodeChange}
+                        placeholder="Enter your code"
+                        className="textarea"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+      
+            {questionSubmitted && (
+              <>
+                <div className="hint-container">
+                  <button
+                    type="button"
+                    onClick={handleHintRequest}
+                    disabled={loading}
+                    className="hint-btn"
+                  >
+                    {loading ? 'Loading Hint...' : 'Request Hint'}
+                  </button>
+                </div>
+      
+                <div className="score-container">
+                  <h4>Current Score: {score}</h4>
+                </div>
+      
+                <div className="submit-container">
+                  <button
+                    type="submit"
+                    onClick={handleSubmitCode}
+                    disabled={loading}
+                    className="submit-btn"
+                  >
+                    {loading ? 'Loading...' : 'Submit Code'}
+                  </button>
+                </div>
+              </>
+            )}
+      
+            {geminiResponses.filter(entry => entry.isHint).length > 0 && (
+              <div className="hint-responses">
+                {geminiResponses
+                  .filter(entry => entry.isHint)
+                  .reverse()
+                  .map((entry, index) => (
+                    <div
+                      key={entry.hintNumber}
+                      className={`hint-card ${entry.hintNumber === 4 ? 'exceeded' : 'regular'}`}
+                    >
+                      <h5>Hint {entry.hintNumber}:</h5>
+                      <p>{entry.response}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+      
+            <h4 className="text-lg font-bold mt-4">Current Score: {score}</h4>
           </div>
-        )}
-
-        <h4 className="text-lg font-bold mt-4">Current Score: {score}</h4>
-      </div>
-    </div>
-  );
+        </div>
+      );
+      
+      
 };
 
 export default GamePage;
