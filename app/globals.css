@@ -1,21 +1,223 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Ensure body is scrollable and center content */
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* Horizontally center the content */
+  align-items: center; /* Vertically center the content */
+  overflow-y: auto; /* Allow scrolling on the body */
+}
+
+/* Make the main container scrollable and centered */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  min-height: 100vh; /* Ensures the container takes the full height */
+  max-width: 1200px;
+  width: 100%;
+  overflow-y: auto; /* Enable vertical scrolling */
+  box-sizing: border-box;
+}
+
+/* Form styling */
+.form {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Center content box for form inputs */
+.center-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+/* Hints and responses area */
+.hint-responses {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.hint-card {
+  background: #f1f1f1;
+  border: 1px solid #5a6eff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.hint-card.exceeded {
+  background: #f8d7da;
+  border-color: #dc3545;
+}
+
+.hint-card.regular {
+  background: #f1f1f1;
+}
+
+/* Styling for difficulty buttons */
+.difficulty-container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.difficulty-btn {
+  padding: 12px 20px;
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.difficulty-btn.selected {
+  background-color: #5a6eff;
+  color: white;
+}
+
+.input,
+.textarea {
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  width: 100%;
+}
+
+.submit-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.error {
+  color: #f44336;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.hint-btn,
+.submit-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #5a6eff;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.hint-btn:hover,
+.submit-btn:hover {
+  background-color: #3b4cdb;
+}
+
+.hint-btn:disabled,
+.submit-btn:disabled {
+  background-color: #b5b5b5;
+  cursor: not-allowed;
+}
+
+.left-section,
+.right-section {
+  width: 48%;
+}
+
+/* Ensure body is scrollable */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-y: auto; /* Allow scrolling on the body */
+}
+
+/* Make the main container scrollable */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+  min-height: 100vh; /* Ensures the container takes the full height */
+  max-width: 1200px;
+  width: 100%;
+  overflow-y: auto; /* Enable vertical scrolling */
+  box-sizing: border-box;
+}
+
+/* Hints and responses area */
+.hint-responses {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Scrollable response box (horizontal and vertical) */
+.response-box {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* Vertical scrolling */
+  overflow-x: auto; /* Horizontal scrolling */
+  max-height: 400px; /* Limit the height to create vertical scroll */
+  height: auto; /* Auto adjust height */
+  min-height: 400px; /* Minimum height for the response box */
+  word-wrap: break-word; /* Ensure words break when they exceed the box width */
+  white-space: normal; /* Allow text to wrap normally */
+  font-family: 'Courier New', monospace; /* Monospaced font for readability */
+  line-height: 1.5; /* Add line spacing for better readability */
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+
+
+/* For textareas (code or input) */
+.textarea,
+.programming-language-element,
+.your-code-element {
+  padding: 12px;
+  font-size: 16px;
+  font-family: 'Courier New', monospace; /* Monospaced font for code */
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  width: 100%;
+  height: 300px; /* Set initial height for both code elements */
+  resize: vertical;
+  overflow-y: auto; /* Allow vertical scroll */
+  overflow-x: auto; /* Allow horizontal scroll */
+  line-height: 1.5;
+}
+
+/* Ensure hint cards are wrapped and scrollable */
+.hint-card {
+  background: #f1f1f1;
+  border: 1px solid #5a6eff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  word-wrap: break-word; /* Ensure words break within hint cards */
+  overflow-wrap: break-word; /* Ensure wrapping */
 }
