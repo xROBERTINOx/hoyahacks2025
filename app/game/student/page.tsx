@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getGoogleGeminiData } from '../../../src/lib/geminiApi';
-// Assuming this function is already available
 
 // Initialize Supabase Client
 const supabase = createClient(
@@ -12,207 +11,165 @@ const supabase = createClient(
 );
 
 const GamePage = () => {
-  const [tableName, setTableName] = useState<string>(''); // Table name input
-  const [difficulty, setDifficulty] = useState<string>(''); // Difficulty selection
-  const [questionData, setQuestionData] = useState<any[]>([]); // Questions fetched from table
-  const [loading, setLoading] = useState(false); // Loading state
-  const [username, setUsername] = useState<string>(''); // Username input
-  const [score, setScore] = useState<number>(0); // Score
-  const [generatedQuestion, setGeneratedQuestion] = useState<string>(''); // Store generated question
+  const [tableName, setTableName] = useState<string>('');
+  const [difficulty, setDifficulty] = useState<string>('');
+  const [questionData, setQuestionData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState<string>('');
+  const [score, setScore] = useState<number>(0);
+  const [generatedQuestion, setGeneratedQuestion] = useState<string>('');
 
-  // Fetch questions from the specified table
-  const fetchQuestionsFromTable = async (tableName: string) => {
-    if (!tableName) return;
-
+  const checkUsername = async () => {
+    if (!username.trim()) return alert('Please enter a username.');
     setLoading(true);
+
     try {
-      const { data, error } = await supabase.from(tableName).select('*');
-      if (error) {
-        alert('Error fetching questions: ' + error.message);
-        return;
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('username', username.trim());
+
+      if (error) throw new Error(error.message);
+
+      if (data && data.length > 0) {
+        await supabase.from('students').update({ score: 0 }).eq('username', username.trim());
+        setScore(0);
+      } else {
+        const { error: insertError } = await supabase.from('students').insert([{ username: username.trim(), score: 0 }]);
+        if (insertError) throw new Error(insertError.message);
+        setScore(0);
       }
-      setQuestionData(data || []);
     } catch (err) {
-      alert('Unexpected error fetching data: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      alert('Error: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Check username in students table
-  const checkUsername = async () => {
-    if (!username) {
-      alert('Please enter a username');
-      return;
-    }
-
-    // Check if the username exists
-    const { data, error } = await supabase
-      .from('students') // Assuming 'students' is your table
-      .select('*')
-      .eq('username', username);
-
-    if (error) {
-      alert('Error checking username: ' + error.message);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      // Username exists, reset score
-      await supabase
-        .from('students')
-        .update({ score: 0 })
-        .eq('username', username);
-      setScore(0);
-      alert('Your score has been reset!');
-    } else {
-      // Username does not exist, insert with score 0
-      const { error: insertError } = await supabase
-        .from('students')
-        .insert([{ username, score: 0 }]);
-
-      if (insertError) {
-        alert('Error inserting username: ' + insertError.message);
-        return;
-      }
-
-      setScore(0);
-      alert('Welcome! Your score has been set to 0.');
-    }
-  };
-
-  // Handle table name change
-  const handleTableChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTableName(e.target.value);
-  };
-
-  // Handle difficulty selection change
-  const handleDifficultyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setDifficulty(e.target.value);
-  };
-
-  // Handle search table click
-  const handleSearchTable = () => {
-    if (!tableName) {
-      alert('Please enter a table name.');
-      return;
-    }
-    fetchQuestionsFromTable(tableName);
-  };
-
-  // Handle question submission and send data to Gemini
   const handleSubmitQuestion = async () => {
-    if (!tableName || !difficulty || !username) {
-      alert('Please provide table name, difficulty, and username.');
-      return;
+    if (!tableName.trim() || !difficulty || !username.trim()) {
+      return alert('Please fill all the fields.');
     }
   
     setLoading(true);
     try {
-      // Send the difficulty and topic to Gemini API
-      const prompt = `Create a ${difficulty} LeetCode-like question about the topic: ${tableName}`;
+      // Check if the table exists and fetch the topic from the first row (id = 1)
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('topic')
+        .eq('id', 1)
+        .single(); // Fetch only the first row
+  
+      if (error || !data) {
+        throw new Error(`Failed to fetch topic for table "${tableName}".`);
+      }
+  
+      const { topic } = data;
+  
+      // Proceed with Gemini API call
+      const prompt = `Create a ${difficulty} LeetCode-like question about the topic: ${topic}`;
       const response = await getGoogleGeminiData(prompt);
   
       // Store the generated question in state
       setGeneratedQuestion(response);
   
-      // Optionally, you can store the generated question in Supabase
+      // Insert the generated question into the table
       await supabase.from(tableName).insert([
         {
           difficulty,
-          topic: tableName,
+          topic,
           question: response,
-          createdby: username, // Add the createdby field with the username
+          createdby: username,
         },
       ]);
   
       alert('Question submitted successfully!');
     } catch (err) {
-      alert('Unexpected error: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      alert('Error: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
   };
   
-
+  
   return (
-    <div>
-      <h1>Game Page</h1>
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-2xl font-bold text-center mb-6">Game Page</h1>
 
-      {/* Username Input */}
-      <div>
-        <label>
-          Username:
+      <div className="flex flex-col gap-6">
+        {/* Username Input */}
+        <div className="form-group">
+          <label className="block mb-2 text-lg font-medium">Username:</label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Enter your username"
+            className="input"
           />
-        </label>
-        <button onClick={checkUsername} disabled={loading}>
-          {loading ? 'Checking...' : 'Submit Username'}
-        </button>
-      </div>
+          
+        </div>
 
-      {/* Table Name Input */}
-      <div>
-        <label>
-          Table Name:
+        {/* Table Name Input */}
+        <div className="form-group">
+          <label className="block mb-2 text-lg font-medium">Table Name:</label>
           <input
             type="text"
             value={tableName}
-            onChange={handleTableChange}
+            onChange={(e) => setTableName(e.target.value)}
             placeholder="Enter table name"
+            className="input"
           />
-        </label>
-        <button onClick={handleSearchTable} disabled={loading}>
-          {loading ? 'Searching...' : 'Search Table'}
-        </button>
-      </div>
-
-      {/* Difficulty Selection */}
-      <div>
-        <label>
-          Difficulty:
-          <select value={difficulty} onChange={handleDifficultyChange}>
-            <option value="">Select Difficulty</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </label>
-      </div>
-
-      <button onClick={handleSubmitQuestion} disabled={loading}>
-        {loading ? 'Submitting...' : 'Submit Question'}
-      </button>
-
-      <hr />
-
-      <h2>Generated Question:</h2>
-      {generatedQuestion ? (
-        <div style={{ border: '1px solid black', padding: '10px', marginBottom: '10px' }}>
-          <p>{generatedQuestion}</p>
         </div>
-      ) : (
-        <p>No question generated yet. Submit a question to get started!</p>
-      )}
 
-      <h4>Current Score: {score}</h4>
+        {/* Difficulty Selection */}
+        <div className="form-group">
+          <label className="block mb-2 text-lg font-medium">Difficulty:</label>
+          <div className="flex gap-4">
+            {['easy', 'medium', 'hard'].map((level) => (
+              <button
+                key={level}
+                className={`difficulty-btn ${difficulty === level ? 'selected' : ''}`}
+                onClick={() => setDifficulty(level)}
+              >
+                {level.charAt(0).toUpperCase() + level.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div>
-        {questionData.length > 0 ? (
-          questionData.map((item, index) => (
-            <div key={index} style={{ border: '1px solid black', padding: '10px', marginBottom: '10px' }}>
-              <p><strong>Topic:</strong> {item.topic}</p>
-              <p><strong>Difficulty:</strong> {item.difficulty}</p>
-              <p><strong>Question:</strong> {item.question}</p> {/* Display the generated question */}
-            </div>
-          ))
-        ) : (
-          <p>No questions yet. Submit a question to start!</p>
+        {/* Submit Question */}
+        <button
+          onClick={handleSubmitQuestion}
+          disabled={loading}
+          className="btn"
+        >
+          {loading ? 'Submitting...' : 'Submit Question'}
+        </button>
+
+        {/* Generated Question */}
+        {generatedQuestion && (
+          <div className="response-box mt-6">
+            <h2 className="text-lg font-bold">Generated Question:</h2>
+            <p className="mt-2">{generatedQuestion}</p>
+          </div>
         )}
+
+        {/* Display Questions */}
+        {questionData.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-lg font-bold">Questions from Table:</h2>
+            {questionData.map((item, index) => (
+              <div key={index} className="question-card mt-4">
+                <p><strong>Topic:</strong> {item.topic}</p>
+                <p><strong>Difficulty:</strong> {item.difficulty}</p>
+                <p><strong>Question:</strong> {item.question}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h4 className="text-lg font-bold mt-4">Current Score: {score}</h4>
       </div>
     </div>
   );

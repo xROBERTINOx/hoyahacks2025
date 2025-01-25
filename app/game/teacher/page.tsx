@@ -23,34 +23,38 @@ const TeacherPage = () => {
       setError('Please provide a challenge name, default language, and default focus area.');
       return;
     }
-
+  
     setLoading(true);
     setError('');
-
+  
     // Clean table name by removing spaces
     const cleanTableName = tableName.replace(/\s+/g, '');
-
+  
     const query = `
       CREATE TABLE IF NOT EXISTS ${cleanTableName} (
         id SERIAL PRIMARY KEY,
-        language TEXT DEFAULT '${defaultLanguage}',  
-        topic TEXT DEFAULT '${defaultTopic}',      
-        question TEXT DEFAULT 'none',              
-        difficulty TEXT NOT NULL
+        language TEXT DEFAULT '${defaultLanguage}',
+        topic TEXT DEFAULT '${defaultTopic}',
+        question TEXT DEFAULT 'none',
+        difficulty TEXT NOT NULL,
+        createdBy TEXT DEFAULT 'none'
       );
       
       ALTER TABLE ${cleanTableName} ENABLE ROW LEVEL SECURITY;
       CREATE POLICY select_policy ON ${cleanTableName} FOR SELECT USING (true);
       CREATE POLICY insert_policy ON ${cleanTableName} FOR INSERT WITH CHECK (true);
+  
+      INSERT INTO ${cleanTableName} (language, topic, question, difficulty, createdBy)
+      VALUES ('${defaultLanguage}', '${defaultTopic}', 'none', 'easy', 'none');
     `;
-
+  
     try {
       const { error } = await supabase.rpc('execute_sql', { sql: query });
-
+  
       if (error) {
         setError('Error creating Challenge: ' + error.message);
       } else {
-        alert(`Challenge "${tableName}" created successfully!`);
+        alert(`Challenge "${tableName}" created successfully with default data!`);
         setupRealtimeSubscription(cleanTableName);
         setTableName('');
         setDefaultLanguage('');
@@ -62,6 +66,7 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
+  
 
   // Set up real-time subscription on the table
   const setupRealtimeSubscription = (cleanTableName: string) => {
