@@ -107,7 +107,7 @@ const Page = () => {
     setError(null);
 
     try {
-      const prompt = `acting as leetcode, score the following coding answer to the previous leetcode coding problem, only send me back a number no text, using the language: ${language}, and the following code: ${code}`;
+      const prompt = `acting as leetcode, score the following coding answer to the previous leetcode coding problem out of 100, only send me back a number no text, using the language: ${language}, and the following code: ${code}`;
       const previousResponses = geminiResponses.map(entry => entry.response);
     
       const response = await getGoogleGeminiData(prompt, previousResponses);
