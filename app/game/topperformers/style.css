@@ -1,0 +1,168 @@
+/* Main container for the leaderboard */
+.leaderboard-container {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    padding: 30px;
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+    background-color: #3f3a3a;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 80vh;
+    box-sizing: border-box;
+  }
+  
+  /* Leaderboard header */
+  .leaderboard-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #dce5ea;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Podium layout */
+  .podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 40px; /* Adds space between the performers */
+    width: 100%;
+    height: 400px; /* Ensure the podium has a fixed height */
+  }
+  
+  /* Performer styles */
+  .top-performer,
+  .second-performer,
+  .third-performer {
+    padding: 20px;
+    border-radius: 10px;
+    width: 200px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    cursor: pointer; /* Indicate interactivity */
+  }
+  
+  /* Hover effect for all performers */
+  .top-performer:hover,
+  .second-performer:hover,
+  .third-performer:hover {
+    transform: scale(1.05); /* Slightly enlarge the performers on hover */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Add a shadow effect */
+  }
+  
+  /* Rank style with circle outline */
+  .rank {
+    font-size: 3rem; /* Larger font size for rank */
+    font-weight: bold;
+    color: #fff;
+    background-color: #333; /* Dark background for the circle */
+    border-radius: 50%; /* Make it circular */
+    width: 80px; /* Fixed width for circle */
+    height: 80px; /* Fixed height for circle */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px; /* Space below the rank circle */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add subtle shadow to the circle */
+    border: 4px solid black; /* Black border around the circle */
+  }
+  
+  /* Specific styles for each performer */
+  .top-performer {
+    background-color: #b9a73f; /* Gold background */
+    height: 300px; /* Tallest height */
+    transform: scale(1.1); /* Slightly larger */
+  }
+  
+  .second-performer {
+    background-color: #C0C0C0; /* Silver background */
+    height: 250px; /* Slightly shorter than top performer */
+  }
+  
+  .third-performer {
+    background-color: #4e2c0b; /* Bronze background */
+    height: 200px; /* Shorter than second performer */
+  }
+  
+  /* Add hover effects to each performer */
+  .top-performer:hover {
+    background-color: #f1c40f; /* Brighten the gold for hover */
+  }
+  
+  .second-performer:hover {
+    background-color: #bdc3c7; /* Lighten the silver for hover */
+  }
+  
+  .third-performer:hover {
+    background-color: #d88b5d; /* Lighter bronze for hover */
+  }
+  
+  /* Rank, username, score styles */
+  .username,
+  .score {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .username {
+    font-size: 1.5rem;
+    margin-top: 5px;
+  }
+  
+  .score {
+    margin-top: 10px;
+    font-size: 1.2rem;
+  }
+  
+  /* Loader and no data styles */
+  .loader {
+    font-size: 1.5rem;
+    color: #3498db;
+    font-weight: bold;
+    animation: spin 1.5s linear infinite;
+  }
+  
+  .no-data {
+    font-size: 1.2rem;
+    color: #ccc;
+  }
+  
+  /* Spin animation for loader */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Responsive design */
+  @media (max-width: 600px) {
+    .leaderboard-container {
+      padding: 20px;
+    }
+  
+    .leaderboard-header {
+      font-size: 2rem;
+    }
+  
+    .podium {
+      flex-direction: column; /* Stack performers vertically on small screens */
+      gap: 20px;
+    }
+  
+    .top-performer,
+    .second-performer,
+    .third-performer {
+      width: 100%;
+      padding: 15px;
+    }
+  }
+  
