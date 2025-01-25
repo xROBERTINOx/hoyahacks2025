@@ -49,14 +49,11 @@ const Page = () => {
         localStorage.setItem('score', String(score - 10));
       }
 
-      let prompt = '';
-      if (hintCount === 0) {
-        prompt = `Provide a Level 3 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
-      } else if (hintCount === 1) {
-        prompt = `Provide a Level 2 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
-      } else if (hintCount === 2) {
-        prompt = `Provide a Level 1 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
-      }
+      const prompt = `Don't include any asterisks or marks. Imagine 4 levels of hints, where 4 nearly gives away the answer and 1 is quite vague. Give a level ${
+        hintCount + 1
+      } LeetCode-like hint for the coding question you provided. just provide the hint do not include any other additional info`;
+
+      
 
       const response = await getGoogleGeminiData(prompt);
 
@@ -247,13 +244,14 @@ const Page = () => {
       {geminiResponses.filter(entry => entry.isHint).length > 0 && (
         <div className="hint-responses">
           {/* Reverse the order of hints when displaying */}
+          
           {geminiResponses
             .filter(entry => entry.isHint) // Get only hint responses
             .reverse() // Reverse the hints here to show Hint 3 first
             .map((entry, index) => (
               <div
                 key={entry.hintNumber} // Key is now the hintNumber
-                className={`hint-card ${index >= 3 ? 'exceeded' : 'regular'}`}
+                className={`hint-card ${entry.hintNumber === 4 ? 'exceeded' : 'regular'}`} // Apply 'exceeded' class if it's Hint 4
               >
                 <h5>Hint {entry.hintNumber}:</h5>
                 <p>{entry.response}</p>
