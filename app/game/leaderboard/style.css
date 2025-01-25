@@ -1,0 +1,166 @@
+/* Main container for leaderboard */
+.leaderboard-container {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    padding: 30px;
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+    background-color: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 80vh; /* Limit the height and make it scrollable */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers all items in the container */
+    justify-content: center; /* Centers vertically in the container */
+  }
+  
+  /* Leaderboard header */
+  .leaderboard-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #053c61;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* List of leaderboard items */
+  .leaderboard-list {
+    margin-top: 20px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ensures all items are centered in the container */
+    width: 100%;
+    overflow-y: auto; /* Ensures scroll bar appears if there are too many items */
+  }
+  
+  /* Each leaderboard item (individual student) */
+  .leaderboard-item {
+    display: flex;
+    justify-content: space-between; /* This ensures the points are aligned to the right */
+    align-items: center;
+    background-color: #ADD8E6; /* Default light blue background for all students */
+    padding: 10px;
+    border-radius: 12px;
+    color: #000;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    width: 90%; /* Makes sure it stays centered within container */
+    max-width: 1100px; /* Keeps a max width for larger screens */
+    text-align: left;
+  }
+  
+  /* Hover effect */
+  .leaderboard-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Highlight top performer with gold background */
+  .top-performer {
+    background-color: #b9a73f; /* Gold */
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Silver background for 2nd place */
+  .second-performer {
+    background-color: #C0C0C0; /* Silver */
+  }
+  
+  /* Bronze background for 3rd place */
+  .third-performer {
+    background-color: #4e2c0b; /* Bronze */
+  }
+  
+  /* Rank and Username container */
+  .rank-username {
+    display: flex;
+    align-items: center;
+    width: 70%; /* Take up most of the space */
+  }
+  
+  .rank {
+    width: 20%; /* Narrow width for rank */
+    margin-right: 10px; /* Space between rank and username */
+    border: 2px solid black; /* Black border for outlined circle */
+    color: black;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 50%; /* Makes the rank circular */
+    width: 40px; /* Fixed size for the circle */
+    height: 40px; /* Fixed size for the circle */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .username {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .score {
+    width: 20%; /* Set width for score */
+    text-align: right; /* Align the score to the right side */
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  /* No data text */
+  .no-data {
+    font-size: 1.2rem;
+    color: #ccc;
+  }
+  
+  /* Loader animation */
+  .loader {
+    font-size: 1.5rem;
+    color: #3498db;
+    font-weight: bold;
+    animation: spin 1.5s linear infinite;
+  }
+  
+  /* Spin animation for loader */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Responsive design */
+  @media (max-width: 600px) {
+    .leaderboard-container {
+      padding: 20px;
+    }
+  
+    .leaderboard-header {
+      font-size: 2rem;
+    }
+  
+    .leaderboard-item {
+      padding: 12px;
+      flex-direction: column; /* Stack elements vertically on small screens */
+      text-align: left;
+    }
+  
+    .rank-username, .score {
+      width: 100%;
+      text-align: left;
+    }
+  
+    .score {
+      margin-top: 5px;
+    }
+  }
+  
