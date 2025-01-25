@@ -9,7 +9,7 @@ const Page = () => {
   const [language, setLanguage] = useState<string>('');
   const [code, setCode] = useState<string>('');
   const [geminiResponses, setGeminiResponses] = useState<
-    { prompt: string; response: string; isHint?: boolean }[]
+    { prompt: string; response: string; isHint?: boolean; hintNumber: number }[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +17,6 @@ const Page = () => {
   const [hintCount, setHintCount] = useState<number>(0);
   const [score, setScore] = useState<number>(100);
 
-  // Initialize score from localStorage or set to 100
   useEffect(() => {
     const storedScore = localStorage.getItem('score');
     if (storedScore) {
@@ -43,35 +42,39 @@ const Page = () => {
     setCode(event.target.value);
   };
 
-  // Request Hint and adjust score based on hint count
   const handleHintRequest = async () => {
     try {
       if (hintCount >= 3) {
         setScore((prevScore) => prevScore - 10); // Deduct points after 3 hints
         localStorage.setItem('score', String(score - 10));
       }
-  
-      const prompt = `Don't include any asterisks or marks. Imagine 4 levels of hints, where 4 nearly gives away the answer and 1 is quite vague. Give a level ${
-        hintCount + 1
-      } LeetCode-like hint for the coding question you provided.`;
-  
+
+      let prompt = '';
+      if (hintCount === 0) {
+        prompt = `Provide a Level 3 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
+      } else if (hintCount === 1) {
+        prompt = `Provide a Level 2 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
+      } else if (hintCount === 2) {
+        prompt = `Provide a Level 1 hint for this problem: "Given an array of integers, find the length of the longest subarray where the absolute difference between any two elements is less than or equal to 1."`;
+      }
+
       const response = await getGoogleGeminiData(prompt);
-  
-      // Append only hint responses to a separate "hints" state
-      setGeminiResponses((prevResponses) => [
-        ...prevResponses,
-        { prompt: 'Hint', response, isHint: true }, // Mark as hint explicitly
-      ]);
-  
-      setHintCount((prevCount) => prevCount + 1); // Increment hint count
-      // setUserWantsHint(true);
+
+      // Increment hint count
+      const newHint = {
+        prompt: `Hint ${hintCount + 1}`,
+        response,
+        isHint: true,
+        hintNumber: hintCount + 1, // The order of hints
+      };
+
+      // Append the new hint to the list
+      setGeminiResponses((prevResponses) => [...prevResponses, newHint]); // Append the new hint
+      setHintCount((prevCount) => prevCount + 1); // Increment the hint count
     } catch (err) {
-      setError('Failed to fetch hint from Gemini:' + err);
+      setError('Failed to fetch hint from Gemini: ' + err);
     }
   };
-  
-  
-  
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,19 +84,21 @@ const Page = () => {
     setError(null);
 
     try {
-      const prompt = `don't include any asterisks or any marks, I only want the text keep all the examples and such like a leetcode problem. make a ${difficulty} leetcode question on ${topic}`;
-      const previousResponses = geminiResponses.map(entry => entry.response);
+      const prompt = `Generate a ${difficulty} level LeetCode question on ${topic}, without any asterisks or marks.`;
+      const previousResponses = geminiResponses
+        .filter(entry => !entry.isHint) // Only previous questions (not hints)
+        .map(entry => entry.response);
 
       const response = await getGoogleGeminiData(prompt, previousResponses);
 
       setGeminiResponses((prevResponses) => [
         ...prevResponses,
-        { prompt, response },
+        { prompt, response, hintNumber: 0 }, // No hint number for question generation
       ]);
 
       setQuestionSubmitted(true);
     } catch (err) {
-      setError('Failed to fetch data from Gemini:'+err);
+      setError('Failed to fetch data from Gemini: ' + err);
     } finally {
       setLoading(false);
     }
@@ -107,208 +112,157 @@ const Page = () => {
     setError(null);
 
     try {
-      const prompt = `acting as leetcode, score the following coding answer to the previous leetcode coding problem out of 100, only send me back a number no text, using the language: ${language}, and the following code: ${code}`;
-      const previousResponses = geminiResponses.map(entry => entry.response);
-    
-      const response = await getGoogleGeminiData(prompt, previousResponses);
-    
+      const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code}`;
+      const response = await getGoogleGeminiData(prompt);
+
       setGeminiResponses((prevResponses) => [
-        { prompt, response }, // Add the new response at the beginning
-        ...prevResponses,    // Include the existing responses after it
+        ...prevResponses,
+        { prompt, response, hintNumber: 0 }, // No hint number for code submission
       ]);
     } catch (err) {
-      setError('Failed to fetch data from Gemini:'+err);
+      setError('Failed to submit code to Gemini: ' + err);
     } finally {
       setLoading(false);
     }
-    
   };
 
   return (
-    <div>
-      <h1>Ask Google Gemini AI</h1>
-
-      <form onSubmit={handleSubmit}>
+    <div className="container">
+      <form onSubmit={handleSubmit} className="form">
         {!questionSubmitted ? (
-          <>
-            <div>
-              <label>Select difficulty:</label>
-              <div>
+          <div className="center-box">
+            <div className="form-group">
+              <label>Select Difficulty:</label>
+              <div className="difficulty-container">
                 <button
                   type="button"
+                  className={`difficulty-btn ${difficulty === 'easy' ? 'selected' : ''}`}
                   onClick={() => handleDifficultySelect('easy')}
-                  style={{
-                    backgroundColor: difficulty === 'easy' ? 'darkgrey' : 'lightgrey',
-                    color: 'black',
-                    borderRadius: '0',
-                    padding: '10px 20px',
-                    margin: '5px',
-                  }}
                 >
                   Easy
                 </button>
                 <button
                   type="button"
+                  className={`difficulty-btn ${difficulty === 'medium' ? 'selected' : ''}`}
                   onClick={() => handleDifficultySelect('medium')}
-                  style={{
-                    backgroundColor: difficulty === 'medium' ? 'darkgrey' : 'lightgrey',
-                    color: 'black',
-                    borderRadius: '0',
-                    padding: '10px 20px',
-                    margin: '5px',
-                  }}
                 >
                   Medium
                 </button>
                 <button
                   type="button"
+                  className={`difficulty-btn ${difficulty === 'hard' ? 'selected' : ''}`}
                   onClick={() => handleDifficultySelect('hard')}
-                  style={{
-                    backgroundColor: difficulty === 'hard' ? 'darkgrey' : 'lightgrey',
-                    color: 'black',
-                    borderRadius: '0',
-                    padding: '10px 20px',
-                    margin: '5px',
-                  }}
                 >
                   Hard
                 </button>
               </div>
             </div>
 
-            <div>
-              <label htmlFor="topic">Enter topic:</label>
+            <div className="form-group">
+              <label htmlFor="topic">Enter Topic:</label>
               <input
                 type="text"
                 id="topic"
                 value={topic}
                 onChange={handleTopicChange}
                 placeholder="Enter topic"
-                style={{ backgroundColor: 'white', color: 'black' }}
+                className="input"
               />
             </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Submit'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="submit-btn"
+            >
+              {loading ? 'Loading...' : 'Generate Question'}
             </button>
-          </>
+          </div>
         ) : (
           <>
-            <div>
-              <h2>Question:</h2>
-              <p>{geminiResponses[0]?.prompt}</p> 
-              <h3>Response:</h3>
-              <pre>{geminiResponses[0]?.response}</pre> 
+            <div className="left-section">
+              <div className="response-box">
+                <pre>{geminiResponses.filter(entry => !entry.isHint)[0]?.response}</pre>
+              </div>
             </div>
 
+            <div className="right-section">
+              <div className="form-group">
+                <label htmlFor="language">Programming Language:</label>
+                <input
+                  type="text"
+                  id="language"
+                  value={language}
+                  onChange={handleLanguageChange}
+                  placeholder="Enter language"
+                  className="input"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="language">Enter programming language:</label>
-              <input
-                type="text"
-                id="language"
-                value={language}
-                onChange={handleLanguageChange}
-                placeholder="Enter language"
-                style={{ backgroundColor: 'white', color: 'black' }}
-              />
+              <div className="form-group">
+                <label htmlFor="code">Your Code:</label>
+                <textarea
+                  id="code"
+                  value={code}
+                  onChange={handleCodeChange}
+                  placeholder="Enter your code"
+                  className="textarea"
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="code">Enter your code:</label>
-              <textarea
-                id="code"
-                value={code}
-                onChange={handleCodeChange}
-                placeholder="Enter your code"
-                style={{
-                  backgroundColor: '#1e1e1e',
-                  color: '#d4d4d4',
-                  fontFamily: 'monospace',
-                  width: '100%',
-                  height: '200px',
-                  padding: '10px',
-                  border: '1px solid #3c3c3c',
-                  borderRadius: '4px',
-                  resize: 'none',
-                }}
-              />
-            </div>
-
-            <button type="submit" onClick={handleSubmitCode} disabled={loading}>
-              {loading ? 'Loading...' : 'Submit Code'}
-            </button>
           </>
         )}
       </form>
 
-
       {questionSubmitted && (
-        <button
-          type="button"
-          onClick={handleHintRequest}
-          disabled={loading}
-          style={{
-            backgroundColor: loading ? 'darkgrey' : 'lightgrey', // Dark grey when loading, light grey otherwise
-            color: 'black',
-            borderRadius: '0',
-            padding: '10px 20px',
-            margin: '5px',
-            cursor: loading ? 'not-allowed' : 'pointer', // Pointer changes to not-allowed when disabled
-            opacity: loading ? 0.7 : 1, // Slightly faded appearance when loading
-          }}
-        >
-          {loading ? 'Loading Hint...' : 'Request Hint'}
-        </button>
+        <>
+          <div className="hint-container">
+            <button
+              type="button"
+              onClick={handleHintRequest}
+              disabled={loading}
+              className="hint-btn"
+            >
+              {loading ? 'Loading Hint...' : 'Request Hint'}
+            </button>
+          </div>
+
+          <div className="score-container">
+            <h4>Current Score: {score}</h4>
+          </div>
+
+          <div className="submit-container">
+            <button
+              type="submit"
+              onClick={handleSubmitCode}
+              disabled={loading}
+              className="submit-btn"
+            >
+              {loading ? 'Loading...' : 'Submit Code'}
+            </button>
+          </div>
+        </>
       )}
 
-
-{/* Display hint count and points deduction message */}
-{hintCount > 0 && (
-  <div>
-    {hintCount == 3 && (
-      <p>
-        If you use another hint, you will be docked points!
-      </p>
-    )}
-    {hintCount > 3 && (
-      <p style={{ color: 'red', fontWeight: 'bold' }}>
-        You have requested more than 3 hints. 10 points have been deducted from your score.
-      </p>
-    )}
-  </div>
-)}
-
-
-{/* Display only hint-related responses */}
-{geminiResponses.filter((entry) => entry.isHint).length > 0 && (
-  <div style={{ marginTop: '10px' }}>
-    {geminiResponses
-      .filter((entry) => entry.isHint) // Ensure only hints are displayed
-      .map((entry, index) => (
-        <div
-          key={index}
-          style={{
-            backgroundColor: index >= 3 ? 'red' : 'yellow', // Hints after 3rd are red
-            color: index >= 3 ? 'white' : 'black', // White text for red background
-            padding: '10px',
-            marginBottom: '10px',
-            borderRadius: '5px',
-            border: '1px solid black',
-          }}
-        >
-          <h5>Hint {index + 1}:</h5>
-          <p>{entry.response}</p>
+      {geminiResponses.filter(entry => entry.isHint).length > 0 && (
+        <div className="hint-responses">
+          {/* Reverse the order of hints when displaying */}
+          {geminiResponses
+            .filter(entry => entry.isHint) // Get only hint responses
+            .reverse() // Reverse the hints here to show Hint 3 first
+            .map((entry, index) => (
+              <div
+                key={entry.hintNumber} // Key is now the hintNumber
+                className={`hint-card ${index >= 3 ? 'exceeded' : 'regular'}`}
+              >
+                <h5>Hint {entry.hintNumber}:</h5>
+                <p>{entry.response}</p>
+              </div>
+            ))}
         </div>
-      ))}
-  </div>
-)}
+      )}
 
-
-      <div>
-        <h4>Current Score: {score}</h4>
-      </div>
-
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && <div className="error">{error}</div>}
     </div>
   );
 };

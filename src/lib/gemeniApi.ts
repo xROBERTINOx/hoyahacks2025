@@ -4,7 +4,8 @@ dotenv.config();
 
 
 // Use the environment variable for the API key
-const NEXT_PUBLIC_GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+// const NEXT_PUBLIC_GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+const NEXT_PUBLIC_GOOGLE_API_KEY = "AIzaSyDJOKU0DF7bDjEgRc_tZYfEfm9W41XgmFE";
 
 if (!NEXT_PUBLIC_GOOGLE_API_KEY) {
   throw new Error('NEXT_PUBLIC_GOOGLE_API_KEY is not defined in your environment variables');
