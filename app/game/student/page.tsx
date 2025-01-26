@@ -13,7 +13,7 @@ const supabase = createClient(
 const GamePage = () => {
   const [tableName, setTableName] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
-  const [questionData, setQuestionData] = useState<any[]>([]);
+  const [questionData] = useState<{ topic: string; difficulty: string; question: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>('');
   const [score, setScore] = useState<number>(100);
@@ -23,7 +23,7 @@ const GamePage = () => {
   const [geminiResponses, setGeminiResponses] = useState<
     { prompt: string; response: string; isHint?: boolean; hintNumber: number }[]
   >([]); 
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 const [language, setLanguage] = useState<string>('');
 const [code, setCode] = useState<string>('')
 
