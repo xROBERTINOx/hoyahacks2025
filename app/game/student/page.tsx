@@ -27,6 +27,33 @@ const GamePage = () => {
 const [language, setLanguage] = useState<string>('');
 const [code, setCode] = useState<string>('')
 
+const uploadQuestionToSupabase = async (
+  createdBy: string,
+  topic: string,
+  question: string,
+  difficulty: string
+) => {
+  try {
+    const { data, error } = await supabase
+      .from('questions') // Replace with your actual table name for storing questions
+      .insert([
+        {
+          created_by: createdBy, // Column for creator's name
+          topic: topic, // Column for the topic of the question
+          question: question, // Column for the question text
+          difficulty: difficulty, // Column for the question difficulty
+        },
+      ]);
+
+    if (error) {
+      throw error;
+    } else {
+      console.log("Question uploaded to Supabase:", data);
+    }
+  } catch (error) {
+    console.error("Error uploading question to Supabase:", error);
+  }
+};
 
 
     const handleLanguageChange = (event: React.ChangeEvent<HTMLInputElement>) => {

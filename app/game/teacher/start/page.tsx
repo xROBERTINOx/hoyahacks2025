@@ -42,13 +42,13 @@ const TeacherPage = () => {
       setError('Please provide a challenge name, default language, and default focus area.');
       return;
     }
-
+  
     setLoading(true);
     setError('');
-
+  
     const cleanTableName = tableName.replace(/\s+/g, '');
     const endTime = new Date(Date.now() + timerMinutes * 60000).toISOString(); // Calculate end time
-
+  
     const query = `
       CREATE TABLE IF NOT EXISTS ${cleanTableName} (
         id SERIAL PRIMARY KEY,
@@ -59,18 +59,18 @@ const TeacherPage = () => {
         createdBy TEXT DEFAULT 'none',
         endtime TIMESTAMP
       );
-
+  
       ALTER TABLE ${cleanTableName} ENABLE ROW LEVEL SECURITY;
       CREATE POLICY select_policy ON ${cleanTableName} FOR SELECT USING (true);
       CREATE POLICY insert_policy ON ${cleanTableName} FOR INSERT WITH CHECK (true);
-
+  
       INSERT INTO ${cleanTableName} (language, topic, question, difficulty, createdBy, endtime)
       VALUES ('${defaultLanguage}', '${defaultTopic}', 'none', 'easy', 'none', '${endTime}');
     `;
-
+  
     try {
       const { error } = await supabase.rpc('execute_sql', { sql: query });
-
+  
       if (error) {
         setError('Error creating Challenge: ' + error.message);
       } else {
@@ -78,7 +78,6 @@ const TeacherPage = () => {
         setTableName('');
         setDefaultLanguage('');
         setDefaultTopic('');
-        router.push('/game/teacher/dashboard'); // Redirect to the dashboard
       }
     } catch (err) {
       setError('Unexpected error: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -86,7 +85,6 @@ const TeacherPage = () => {
       setLoading(false);
     }
   };
-
   
 
   const handleStartGame = async () => {

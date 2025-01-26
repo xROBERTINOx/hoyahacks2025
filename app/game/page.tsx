@@ -13,7 +13,14 @@ const GamePage = () => {
     const [question, setQuestion] = useState('');
     const [difficulty, setDifficulty] = useState('');
     const [language, setLanguage] = useState('');
-    const [questionData, setQuestionData] = useState<any[]>([]);
+    interface Question {
+      id: number;
+      language: string;
+      topic: string;
+      difficulty: string;
+    }
+
+    const [questionData, setQuestionData] = useState<Question[]>([]);
     const [loading, setLoading] = useState(false);
   
     // Fetch initial data
@@ -45,7 +52,13 @@ const GamePage = () => {
             (payload) => {
               alert('Realtime update received!');
               if (payload.new) {
-                setQuestionData((prevData) => [...prevData, payload.new]);
+                const newQuestion: Question = {
+                  id: payload.new.id,
+                  language: payload.new.language,
+                  topic: payload.new.topic,
+                  difficulty: payload.new.difficulty,
+                };
+                setQuestionData((prevData) => [...prevData, newQuestion]);
                 alert('New question added: ' + JSON.stringify(payload.new));
               } else {
                 alert('No "new" data found in the payload.');
@@ -104,13 +117,7 @@ const GamePage = () => {
         setQuestion('');  // Clear question input after submission
       };
       
-      
-  
-    // Handle question selection
-    const handleQuestionSelect = (question: any) => {
-      alert(`You selected the question: ${question.topic}`);
-      // You can handle further actions here for the student side.
-    };
+    
   
     return (
       <div>
