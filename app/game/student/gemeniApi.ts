@@ -13,6 +13,7 @@ if (!NEXT_PUBLIC_GOOGLE_API_KEY) {
 // Function to interact with Google Gemini AI and accept a prompt and previous responses
 export const getGoogleGeminiData = async (prompt: string, previousResponses: string[] = []) => {
   try {
+    alert("hi");
     // Initialize the Google Generative AI SDK with the API key
     const genAI = new GoogleGenerativeAI(NEXT_PUBLIC_GOOGLE_API_KEY);
 
