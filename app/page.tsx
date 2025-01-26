@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Gamepad2, GraduationCap } from 'lucide-react';
+import Link from "next/link";
+import { Gamepad2, GraduationCap } from "lucide-react";
 
 const HomePage = () => {
   return (
@@ -22,12 +22,12 @@ const HomePage = () => {
       <div className="mt-16 flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-8 z-10">
         <Link href="/game/student" className="w-full md:w-auto">
           <button className="flex items-center justify-center w-96 max-w-full px-10 py-6 text-2xl md:text-3xl font-bold bg-yellow-400 text-black rounded-full shadow-2xl hover:shadow-lg hover:bg-yellow-300 transition-all transform hover:scale-105">
-            <GraduationCap className="mr-4" size={36} /> I'm a Student
+            <GraduationCap className="mr-4" size={36} /> I&aposm a Student
           </button>
         </Link>
         <Link href="/game/teacher/start" className="w-full md:w-auto">
           <button className="flex items-center justify-center w-96 max-w-full px-10 py-6 text-2xl md:text-3xl font-bold bg-teal-500 text-white rounded-full shadow-2xl hover:shadow-lg hover:bg-teal-400 transition-all transform hover:scale-105">
-            <Gamepad2 className="mr-4" size={36} /> I'm a Teacher
+            <Gamepad2 className="mr-4" size={36} /> I&aposm a Teacher
           </button>
         </Link>
       </div>
