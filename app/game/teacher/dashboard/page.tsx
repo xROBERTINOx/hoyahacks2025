@@ -11,8 +11,8 @@ const supabase = createClient(
 
 const TeacherPage = () => {
   const [tableName, setTableName] = useState('');
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+const [questions, setQuestions] = useState<{ topic: string; question: string; difficulty: string }[]>([]);
+const [students, setStudents] = useState<{ name: string; score: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false); // Flag for form submission
@@ -51,7 +51,14 @@ const TeacherPage = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table },
         (payload) => {
-          setQuestions((prevQuestions) => [...prevQuestions, payload.new]);
+          setQuestions((prevQuestions) => [
+            ...prevQuestions,
+            {
+              topic: payload.new.topic,
+              question: payload.new.question,
+              difficulty: payload.new.difficulty,
+            },
+          ]);
         }
       )
       .subscribe();

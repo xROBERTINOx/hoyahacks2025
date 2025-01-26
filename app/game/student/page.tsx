@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getGoogleGeminiData } from '../../../src/lib/geminiApi';
 
@@ -27,66 +27,13 @@ const GamePage = () => {
 const [language, setLanguage] = useState<string>('');
 const [code, setCode] = useState<string>('')
 
-const uploadQuestionToSupabase = async (
-  createdBy: string,
-  topic: string,
-  question: string,
-  difficulty: string
-) => {
-  try {
-    const { data, error } = await supabase
-      .from('questions') // Replace with your actual table name for storing questions
-      .insert([
-        {
-          created_by: createdBy, // Column for creator's name
-          topic: topic, // Column for the topic of the question
-          question: question, // Column for the question text
-          difficulty: difficulty, // Column for the question difficulty
-        },
-      ]);
-
-    if (error) {
-      throw error;
-    } else {
-      console.log("Question uploaded to Supabase:", data);
-    }
-  } catch (error) {
-    console.error("Error uploading question to Supabase:", error);
-  }
-};
 
 
     const handleLanguageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setLanguage(event.target.value);
     }
 
-  const checkUsername = async () => {
-    if (!username.trim()) return alert('Please enter a username.');
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('username', username.trim());
-
-      if (error) throw new Error(error.message);
-
-      if (data && data.length > 0) {
-        await supabase.from('students').update({ score: 100 }).eq('username', username.trim());
-        setScore(100);
-      } else {
-        const { error: insertError } = await supabase.from('students').insert([{ username: username.trim(), score:100 }]);
-        if (insertError) throw new Error(insertError.message);
-        setScore(100);
-        alert('Welcome! Your score has been set to 100.');
-      }
-    } catch (err) {
-      alert('Error: ' + (err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   const handleSubmitQuestion = async () => {
     if (!tableName.trim() || !difficulty || !username.trim()) {
@@ -97,7 +44,7 @@ const uploadQuestionToSupabase = async (
     
     try {
       // Check if the table exists
-      const { data, error } = await supabase.from(tableName).select('*').limit(1);
+      const { error } = await supabase.from(tableName).select('*').limit(1);
       if (error) {
         throw new Error(`Table "${tableName}" does not exist or is inaccessible.`);
       }
@@ -119,7 +66,7 @@ const uploadQuestionToSupabase = async (
         },
       ]);
   
-      alert('Question submitted successfully!');
+      // alert('Question submitted successfully!');
       setQuestionSubmitted(true);
     } catch (err) {
       alert('Error: ' + (err as Error).message);
@@ -164,62 +111,69 @@ const uploadQuestionToSupabase = async (
     };
 
     const handleSubmitCode = async (event: React.FormEvent) => {
-  event.preventDefault();
-  if (!language.trim() || !code.trim()) return;
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    // Send prompt to Gemini API
-    const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code} from 0 to 100 and only return the numerical value, no words, with 50 and more being a pass`;
-    const response = await getGoogleGeminiData(prompt);
-
-    alert("response: " + response); // Debugging alert, can be removed later
-
-    // Check if the response is greater than or equal to 50
-    if (parseInt(response) >= 50) {
-      // Send another question to Gemini
-      const newPrompt = `Acting as LeetCode, provide a new coding question in ${language} based on the previous question`;
-      const newResponse = await getGoogleGeminiData(newPrompt);
-
-      alert("new response: " + newResponse); // Debugging alert, can be removed later
-
-      // Update the state to set the new question
-      setGeneratedQuestion(newResponse);
-
-      // Clear the answer and Gemini queue
-      setCode(""); // Clear the answer input
-      setGeminiResponses([]); // Clear the queue
-    }
-
-    // Update score in the state
-    const newScore = score + parseInt(response);
-    setScore(newScore);
-
-    // Update score in Supabase
-    const { data, error } = await supabase
-      .from('users') // Replace 'users' with your actual table name
-      .update({ score: newScore }) // Replace 'score' with the actual column name
-      .eq('user_id', 'your-user-id'); // Replace 'your-user-id' with the current user ID
-
-    if (error) {
-      throw error;
-    } else {
-      console.log("Score updated in Supabase:", data);
-    }
-
-    // Add Gemini response to the state for display
-    setGeminiResponses((prevResponses) => [
-      ...prevResponses,
-      { prompt, response, hintNumber: 0 }, // No hint number for code submission
-    ]);
-  } catch (err) {
-    setError('Failed to submit code to Gemini or update score in Supabase: ' + err);
-  } finally {
-    setLoading(false);
-  }
-};
+      event.preventDefault();
+      if (!language.trim() || !code.trim()) return;
+    
+      setLoading(true);
+      setError(null);
+    
+      try {
+        // Send prompt to Gemini API
+        const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code} from 0 to 100 and only return the numerical value, no words, with 50 and more being a pass`;
+        const response = await getGoogleGeminiData(prompt);
+    
+        // Validate if the response is a number
+        const scoreValue = parseInt(response);
+        if (isNaN(scoreValue)) {
+          alert("Wrong, please try again!");
+          setLoading(false);
+          return;
+        }
+    
+        // Check if the score is passing
+        if (scoreValue >= 50) {
+          // Send another question to Gemini
+          const newPrompt = `Acting as LeetCode, provide a new coding question in ${language} based on the previous question`;
+          const newResponse = await getGoogleGeminiData(newPrompt);
+    
+          // Update the state with the new question
+          setGeneratedQuestion(newResponse);
+    
+          // Clear the answer and Gemini queue
+          setCode(""); // Clear the answer input
+          setGeminiResponses([]); // Clear the queue
+        } else {
+          alert("That answer is wrong, please try again!");
+        }
+    
+        // Update score in the state
+        const newScore = score + scoreValue;
+        setScore(newScore);
+    
+        // Update score in Supabase
+        const { data, error } = await supabase
+          .from('users') // Replace 'users' with your actual table name
+          .update({ score: newScore }) // Replace 'score' with the actual column name
+          .eq('user_id', 'your-user-id'); // Replace 'your-user-id' with the current user ID
+    
+        if (error) {
+          throw error;
+        } else {
+          console.log("Score updated in Supabase:", data);
+        }
+    
+        // Add Gemini response to the state for display
+        setGeminiResponses((prevResponses) => [
+          ...prevResponses,
+          { prompt, response, hintNumber: 0 }, // No hint number for code submission
+        ]);
+      } catch (err) {
+        setError('Failed to submit code to Gemini or update score in Supabase: ' + err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
 
     
     
@@ -371,7 +325,7 @@ const uploadQuestionToSupabase = async (
                 {geminiResponses
                   .filter(entry => entry.isHint)
                   .reverse()
-                  .map((entry, index) => (
+                  .map((entry) => (
                     <div
                       key={entry.hintNumber}
                       className={`hint-card ${entry.hintNumber === 4 ? 'exceeded' : 'regular'}`}

@@ -248,7 +248,7 @@ const Page = () => {
           {geminiResponses
             .filter(entry => entry.isHint) // Get only hint responses
             .reverse() // Reverse the hints here to show Hint 3 first
-            .map((entry, index) => (
+            .map((entry) => (
               <div
                 key={entry.hintNumber} // Key is now the hintNumber
                 className={`hint-card ${entry.hintNumber === 4 ? 'exceeded' : 'regular'}`} // Apply 'exceeded' class if it's Hint 4
