@@ -15,7 +15,6 @@ const supabase = createClient(
 const GamePage = () => {
   const [tableName, setTableName] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
-  const [questionData] = useState<{ topic: string; difficulty: string; question: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState<string>('');
   const [score, setScore] = useState<number>(100);

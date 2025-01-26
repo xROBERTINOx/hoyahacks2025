@@ -16,8 +16,7 @@ const [students, setStudents] = useState<{ name: string; score: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false); // Flag for form submission
-  const [gameStarted, setGameStarted] = useState(false);
-const [gameEndTime, setGameEndTime] = useState<Date | null>(null);
+  const [, setGameStarted] = useState(false);
 
 
   // Fetch questions for the table
@@ -120,7 +119,7 @@ const [gameEndTime, setGameEndTime] = useState<Date | null>(null);
     }
   
     try {
-      // Update the 'hasgamestarted' column in the challenge table
+      // Update the 'hasGameStarted' column in the challenge table
       const { error } = await supabase
         .from(tableName) // Use the selected table
         .update({ hasgamestarted: true }) // Set hasGameStarted to true
@@ -134,14 +133,7 @@ const [gameEndTime, setGameEndTime] = useState<Date | null>(null);
       // Update local state to reflect the game has started
       setGameStarted(true);
   
-      // Alert announcing the game has started
-      alert('Game has started for the challenge!');
-  
       console.log('Game has started for challenge:', tableName);
-  
-      // Hide the start button by updating the state (optional if needed)
-      setIsSubmitted(true);
-  
     } catch (err) {
       if (err instanceof Error) {
         setError(`Game start failed: ${err.message}`);
@@ -152,7 +144,6 @@ const [gameEndTime, setGameEndTime] = useState<Date | null>(null);
       }
     }
   };
-  
   
   
 
