@@ -21,7 +21,7 @@ const Leaderboard = () => {
 
       try {
         const { data, error } = await supabase
-          .from('students') // Assuming 'students' is your table
+          .from('users') // Assuming 'students' is your table
           .select('username, score')
           .order('score', { ascending: false }); // Sort by score, descending
 

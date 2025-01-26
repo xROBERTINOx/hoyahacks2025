@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase Client securely using environment variables
@@ -15,14 +15,14 @@ const TeacherPage = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);  // Flag to trigger data fetching
+  const [isSubmitted, setIsSubmitted] = useState(false); // Flag for form submission
 
   // Fetch questions for the table
   const fetchQuestions = async (table: string) => {
     const { data, error } = await supabase
       .from(table)
       .select('*');
-    
+
     if (error) {
       setError('Error fetching questions: ' + error.message);
     } else {
@@ -43,7 +43,23 @@ const TeacherPage = () => {
     }
   };
 
-  // Handle submit button click to start fetching data
+  // Subscribe to real-time updates for the questions table
+  const subscribeToTable = (table: string) => {
+    const subscription = supabase
+      .channel(`realtime-${table}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table },
+        (payload) => {
+          setQuestions((prevQuestions) => [...prevQuestions, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return subscription;
+  };
+
+  // Handle form submission
   const handleSubmit = async () => {
     if (!tableName) {
       setError('Please provide a challenge name.');
@@ -53,16 +69,39 @@ const TeacherPage = () => {
     setLoading(true);
     setError('');
 
-    // Clean table name by removing spaces
     const cleanTableName = tableName.replace(/\s+/g, '');
 
-    // Fetch data for the given table
     await fetchQuestions(cleanTableName);
     await fetchStudents();
-    
-    setIsSubmitted(true); // Set the flag to true once data is fetched
+
+    // Subscribe to the table for real-time updates
+    subscribeToTable(cleanTableName);
+
+    setIsSubmitted(true); // Mark form as submitted
     setLoading(false);
   };
+
+  // Refresh data (questions and students)
+  const refreshData = async () => {
+    if (!tableName) return;
+
+    setLoading(true);
+    setError('');
+
+    const cleanTableName = tableName.replace(/\s+/g, '');
+
+    await fetchQuestions(cleanTableName);
+    await fetchStudents();
+
+    setLoading(false);
+  };
+
+  // Cleanup subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      supabase.removeAllChannels();
+    };
+  }, []);
 
   return (
     <div className="container">
@@ -70,24 +109,30 @@ const TeacherPage = () => {
 
       {error && <div className="error-message">{error}</div>}
 
-      {/* Table Name Input */}
-      <div className="form-group">
-        <label htmlFor="tableName">Challenge Name:</label>
-        <input
-          id="tableName"
-          type="text"
-          value={tableName}
-          onChange={(e) => setTableName(e.target.value)}
-          placeholder="Enter challenge name"
-          className="input-field"
-        />
-      </div>
+      {!isSubmitted ? (
+        // Show form if not submitted
+        <>
+          <div className="form-group">
+            <label htmlFor="tableName">Challenge Name:</label>
+            <input
+              id="tableName"
+              type="text"
+              value={tableName}
+              onChange={(e) => setTableName(e.target.value)}
+              placeholder="Enter challenge name"
+              className="input-field"
+            />
+          </div>
 
-      <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-        {loading ? 'Fetching Data...' : 'Submit'}
-      </button>
+          <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Fetching Data...' : 'Submit'}
+          </button>
+        </>
+      ) : (
+        // Show the challenge name and hide form after submission
+        <h2 className="challenge-name">Challenge: {tableName}</h2>
+      )}
 
-      {/* Display Questions and Students only after submission */}
       {isSubmitted && (
         <>
           {/* Questions Section */}
@@ -124,6 +169,15 @@ const TeacherPage = () => {
               )}
             </div>
           </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={refreshData}
+            disabled={loading}
+            className="refresh-btn"
+          >
+            {loading ? 'Refreshing Data...' : 'Refresh Data'}
+          </button>
         </>
       )}
     </div>

@@ -93,10 +93,10 @@ const [code, setCode] = useState<string>('')
         },
       ]);
   
-      alert('Question submitted successfully!');
+      // alert('Question submitted successfully!');
       setQuestionSubmitted(true);
     } catch (err) {
-      alert('Error: ' + (err as Error).message);
+      // alert('Error: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -145,11 +145,11 @@ const [code, setCode] = useState<string>('')
       setError(null);
     
       const prompt = `Acting as LeetCode, score the following code answer in ${language}: ${code}, only sending the number`;
-alert("about to get response");
+// alert("about to get response");
 
 try {
   const response = await getGoogleGeminiData(prompt);
-  alert("awaiting response");
+  // alert("awaiting response");
 
   // Extract the score from the response
   const score = parseInt(response); // Assuming Gemini's response is the score number
@@ -159,7 +159,7 @@ try {
     return;
   }
 
-  alert(`Received score: ${score}`);
+  // alert(`Received score: ${score}`);
 
   // Assuming we have the student's username (could be passed in via props, state, etc.)
   const studentUsername = username; // Replace with actual username variable
@@ -190,7 +190,7 @@ try {
   } else {
     // Optionally, log the successful update
     console.log(`Updated score for ${studentUsername}:`, data);
-    alert(`Successfully updated score for ${studentUsername}`);
+    // alert(`Successfully updated score for ${studentUsername}`);
   }
 } catch (err) {
   setError('Failed to submit code or update score: ' + (err instanceof Error ? err.message : 'Unknown error'));
