@@ -16,6 +16,9 @@ const [students, setStudents] = useState<{ name: string; score: number }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false); // Flag for form submission
+  const [gameStarted, setGameStarted] = useState(false);
+const [gameEndTime, setGameEndTime] = useState<Date | null>(null);
+
 
   // Fetch questions for the table
   const fetchQuestions = async (table: string) => {
@@ -110,6 +113,49 @@ const [students, setStudents] = useState<{ name: string; score: number }[]>([]);
     };
   }, []);
 
+  const startGame = async () => {
+    if (!tableName) {
+      setError('No challenge selected');
+      return;
+    }
+  
+    try {
+      // Update the 'hasgamestarted' column in the challenge table
+      const { error } = await supabase
+        .from(tableName) // Use the selected table
+        .update({ hasgamestarted: true }) // Set hasGameStarted to true
+        .eq('id', 1); // Assuming the first row is the game setup
+  
+      if (error) {
+        console.error('Error starting game:', error); // Log the specific error
+        throw new Error(error.message || 'Unknown error starting the game');
+      }
+  
+      // Update local state to reflect the game has started
+      setGameStarted(true);
+  
+      // Alert announcing the game has started
+      alert('Game has started for the challenge!');
+  
+      console.log('Game has started for challenge:', tableName);
+  
+      // Hide the start button by updating the state (optional if needed)
+      setIsSubmitted(true);
+  
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(`Game start failed: ${err.message}`);
+        console.error('Error details:', err); // Log error details
+      } else {
+        setError('Game start failed: An unknown error occurred.');
+        console.error('Unknown error:', err); // Log unknown error details
+      }
+    }
+  };
+  
+  
+  
+
   return (
     <div className="container">
       <h1 className="header">Teacher Dashboard</h1>
@@ -142,6 +188,15 @@ const [students, setStudents] = useState<{ name: string; score: number }[]>([]);
 
       {isSubmitted && (
         <>
+
+<button 
+ onClick={startGame}
+ className="w-full mt-4 p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+>
+ Start Game
+</button>
+
+
           {/* Questions Section */}
           <div className="section">
             <h2 className="section-title">Questions in {tableName}</h2>

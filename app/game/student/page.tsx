@@ -23,7 +23,7 @@ const GamePage = () => {
   const [geminiResponses, setGeminiResponses] = useState<
     { prompt: string; response: string; isHint?: boolean; hintNumber: number }[]
   >([]); 
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 const [language, setLanguage] = useState<string>('');
 const [code, setCode] = useState<string>('')
 
